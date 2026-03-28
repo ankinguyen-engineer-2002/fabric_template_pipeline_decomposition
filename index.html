@@ -149,8 +149,8 @@ svg{display:block}
     </div>
     <div class="sts" style="border-top:none;padding-top:0">
       <div class="st"><div class="st-v" style="color:var(--green2)">26</div><div class="st-l">Total</div></div>
-      <div class="st"><div class="st-v" style="color:var(--blue2)">~234M</div><div class="st-l">Rows</div></div>
-      <div class="st"><div class="st-v" style="color:var(--text)">25/26</div><div class="st-l">Success</div></div>
+      <div class="st"><div class="st-v" style="color:var(--blue2)">~233M</div><div class="st-l">Rows</div></div>
+      <div class="st"><div class="st-v" style="color:var(--text)">26/26</div><div class="st-l">Success</div></div>
     </div>
   </div>
 </div>
@@ -158,32 +158,32 @@ svg{display:block}
 
 <script>
 const DATA=[
-  {layer:'REF',order:1,table:'ref_calendar_2',load:'overwrite',freq:'Monthly',rows:21551,status:'success',nb:'1f372050-e7ac',runtime:'41s'},
-  {layer:'REF',order:1,table:'ref_customer_account_2',load:'overwrite',freq:'Monthly',rows:35535,status:'success',nb:'bf25c624-a157',runtime:'37s'},
-  {layer:'REF',order:1,table:'ref_customer_grouping_2',load:'overwrite',freq:'Monthly',rows:35439,status:'success',nb:'ff5572f6-7d00',runtime:'39s'},
-  {layer:'REF',order:1,table:'ref_customer_shipping_location_2',load:'overwrite',freq:'Monthly',rows:127360,status:'success',nb:'86ddb826-a1f2',runtime:'46s'},
-  {layer:'REF',order:1,table:'ref_forecast_horizon_2',load:'overwrite',freq:'Monthly',rows:5,status:'success',nb:'5525c13b-529b',runtime:'19s'},
-  {layer:'REF',order:1,table:'ref_item_master_2',load:'overwrite',freq:'Monthly',rows:379236,status:'success',nb:'31dc60e8-879e',runtime:'63s'},
-  {layer:'REF',order:1,table:'ref_order_type_2',load:'overwrite',freq:'Monthly',rows:29,status:'success',nb:'cafa8be1-e811',runtime:'40s'},
-  {layer:'REF',order:1,table:'ref_product_2',load:'overwrite',freq:'Monthly',rows:373326,status:'success',nb:'8e454a89-f6f2',runtime:'48s'},
-  {layer:'REF',order:1,table:'ref_warehouse_2',load:'overwrite',freq:'Daily',rows:55,status:'success',nb:'44068990-bc42',runtime:'16s'},
-  {layer:'BRZ',order:1,table:'brz_saleshistory_afi__invoicedetail_2',load:'overwrite',freq:'Daily',rows:35880410,status:'success',nb:'24e6e753-4985',runtime:'461s'},
-  {layer:'BRZ',order:1,table:'brz_saleshistory_afi__invoiceheader_2',load:'overwrite',freq:'Daily',rows:4094639,status:'success',nb:'b1f60a2e-bf39',runtime:'73s'},
-  {layer:'BRZ',order:1,table:'brz_supplychain_enh_1__demandforecastsnapshotdaily_2',load:'incremental',freq:'Daily',rows:0,status:'failed',nb:'8a714133-6411',runtime:'-'},
-  {layer:'BRZ',order:1,table:'brz_wholesale_codis_afi__codatan_2',load:'overwrite',freq:'Daily',rows:918213,status:'success',nb:'d1f00c08-5410',runtime:'50s'},
-  {layer:'BRZ',order:1,table:'brz_wholesale_codis_afi__comast_2',load:'overwrite',freq:'Daily',rows:228030,status:'success',nb:'dbdbaba0-06a4',runtime:'38s'},
-  {layer:'BRZ',order:1,table:'brz_wholesale_codis_afi__extord_2',load:'overwrite',freq:'Daily',rows:228022,status:'success',nb:'cd867d08-5d44',runtime:'49s'},
-  {layer:'BRZ',order:1,table:'brz_wholesale_codis_afi__extorit_2',load:'overwrite',freq:'Daily',rows:912132,status:'success',nb:'7864b7c6-a755',runtime:'117s'},
-  {layer:'SLV',order:2,table:'slv_forecast_demand_monthly_2',load:'overwrite',freq:'Daily',rows:13876949,status:'success',nb:'52a03730-b55e',runtime:'-',lineage:['brz_demandforecast','ref_forecast_cycle','ref_calendar']},
-  {layer:'SLV',order:2,table:'slv_invoice_detail_line_level_2',load:'overwrite',freq:'Daily',rows:85813137,status:'success',nb:'269a9b25-13bf',runtime:'-',lineage:['brz_invoicedetail','brz_invoiceheader','ref_customer_grouping']},
-  {layer:'SLV',order:2,table:'slv_open_order_line_level_2',load:'overwrite',freq:'Daily',rows:285650,status:'success',nb:'a9676a07-33f0',runtime:'-',lineage:['brz_extorit','brz_comast','brz_extord','ref_item_master','ref_order_type']},
-  {layer:'SLV',order:3,table:'slv_actual_demand_monthly_2',load:'overwrite',freq:'Daily',rows:6011419,status:'success',nb:'1dd75fc5-3578',runtime:'-',lineage:['ref_calendar','ref_customer_grouping','slv_invoice_detail']},
-  {layer:'SLV',order:3,table:'slv_actual_demand_weekly_2',load:'overwrite',freq:'Daily',rows:14404515,status:'success',nb:'b571c951-1775',runtime:'-',lineage:['ref_calendar','ref_customer_grouping','slv_invoice_detail']},
-  {layer:'SLV',order:3,table:'slv_invoice_weekly_2',load:'overwrite',freq:'Daily',rows:36326734,status:'success',nb:'4ff7024e-4cba',runtime:'-',lineage:['ref_calendar','slv_invoice_detail']},
-  {layer:'SLV',order:3,table:'slv_open_order_monthly_2',load:'overwrite',freq:'Daily',rows:116963,status:'success',nb:'60cfd207-2ef5',runtime:'-',lineage:['ref_calendar','ref_customer_grouping','slv_open_order']},
-  {layer:'SLV',order:4,table:'slv_naive_forecast_monthly_2',load:'overwrite',freq:'Daily',rows:5039005,status:'success',nb:'786c0566-47be',runtime:'-',lineage:['ref_calendar','slv_actual_demand','slv_forecast_demand']},
-  {layer:'GLD',order:5,table:'gld_flat_forecast_actual_2',load:'overwrite',freq:'Daily',rows:24927373,status:'success',nb:'4abb9011-9b6a',runtime:'-',lineage:['slv_actual_demand_monthly']},
-  {layer:'GLD',order:5,table:'gld_forecast_kpi_metric_2',load:'overwrite',freq:'Daily',rows:2089706,status:'success',nb:'1a595d94-71f6',runtime:'-',lineage:['slv_forecast_demand','slv_actual_demand','slv_naive_forecast']}
+  {layer:'REF',order:1,table:'ref_calendar_2',load:'overwrite',freq:'Monthly',rows:21551,status:'success',nb:'1f372050-e7a',runtime:'41s'},
+  {layer:'REF',order:1,table:'ref_customer_account_2',load:'overwrite',freq:'Monthly',rows:35535,status:'success',nb:'bf25c624-a15',runtime:'37s'},
+  {layer:'REF',order:1,table:'ref_customer_grouping_2',load:'overwrite',freq:'Monthly',rows:35439,status:'success',nb:'ff5572f6-7d0',runtime:'39s'},
+  {layer:'REF',order:1,table:'ref_customer_shipping_location_2',load:'overwrite',freq:'Monthly',rows:127360,status:'success',nb:'86ddb826-a1f',runtime:'46s'},
+  {layer:'REF',order:1,table:'ref_forecast_horizon_2',load:'overwrite',freq:'Monthly',rows:5,status:'success',nb:'5525c13b-529',runtime:'19s'},
+  {layer:'REF',order:1,table:'ref_item_master_2',load:'overwrite',freq:'Monthly',rows:379236,status:'success',nb:'31dc60e8-879',runtime:'1m03s'},
+  {layer:'REF',order:1,table:'ref_order_type_2',load:'overwrite',freq:'Monthly',rows:29,status:'success',nb:'cafa8be1-e81',runtime:'40s'},
+  {layer:'REF',order:1,table:'ref_product_2',load:'overwrite',freq:'Monthly',rows:373326,status:'success',nb:'8e454a89-f6f',runtime:'48s'},
+  {layer:'REF',order:1,table:'ref_warehouse_2',load:'overwrite',freq:'Daily',rows:55,status:'success',nb:'44068990-bc4',runtime:'16s'},
+  {layer:'BRZ',order:1,table:'brz_saleshistory_afi__invoicedetail_2',load:'overwrite',freq:'Daily',rows:36333307,status:'success',nb:'24e6e753-498',runtime:'9m45s'},
+  {layer:'BRZ',order:1,table:'brz_saleshistory_afi__invoiceheader_2',load:'overwrite',freq:'Daily',rows:4116211,status:'success',nb:'b1f60a2e-bf3',runtime:'1m16s'},
+  {layer:'BRZ',order:1,table:'brz_supplychain_enh_1__demandforecastsnapshotdaily_2',load:'incremental',freq:'Daily',rows:0,status:'success',nb:'8a714133-641',runtime:'n/a'},
+  {layer:'BRZ',order:1,table:'brz_wholesale_codis_afi__codatan_2',load:'overwrite',freq:'Daily',rows:918213,status:'success',nb:'d1f00c08-541',runtime:'51s'},
+  {layer:'BRZ',order:1,table:'brz_wholesale_codis_afi__comast_2',load:'overwrite',freq:'Daily',rows:232229,status:'success',nb:'dbdbaba0-06a',runtime:'44s'},
+  {layer:'BRZ',order:1,table:'brz_wholesale_codis_afi__extord_2',load:'overwrite',freq:'Daily',rows:231638,status:'success',nb:'cd867d08-5d4',runtime:'57s'},
+  {layer:'BRZ',order:1,table:'brz_wholesale_codis_afi__extorit_2',load:'overwrite',freq:'Daily',rows:912132,status:'success',nb:'7864b7c6-a75',runtime:'1m45s'},
+  {layer:'SLV',order:2,table:'slv_forecast_demand_monthly_2',load:'overwrite',freq:'Daily',rows:13876949,status:'success',nb:'52a03730-b55',runtime:'n/a'},
+  {layer:'SLV',order:2,table:'slv_invoice_detail_line_level_2',load:'overwrite',freq:'Daily',rows:85813137,status:'success',nb:'269a9b25-13b',runtime:'n/a'},
+  {layer:'SLV',order:2,table:'slv_open_order_line_level_2',load:'overwrite',freq:'Daily',rows:289618,status:'success',nb:'a9676a07-33f',runtime:'n/a'},
+  {layer:'SLV',order:3,table:'slv_actual_demand_monthly_2',load:'overwrite',freq:'Daily',rows:6011047,status:'success',nb:'1dd75fc5-357',runtime:'n/a'},
+  {layer:'SLV',order:3,table:'slv_actual_demand_weekly_2',load:'overwrite',freq:'Daily',rows:14402770,status:'success',nb:'b571c951-177',runtime:'n/a'},
+  {layer:'SLV',order:3,table:'slv_invoice_weekly_2',load:'overwrite',freq:'Daily',rows:36326734,status:'success',nb:'4ff7024e-4cb',runtime:'n/a'},
+  {layer:'SLV',order:3,table:'slv_open_order_monthly_2',load:'overwrite',freq:'Daily',rows:122103,status:'success',nb:'60cfd207-2ef',runtime:'n/a'},
+  {layer:'SLV',order:4,table:'slv_naive_forecast_monthly_2',load:'overwrite',freq:'Daily',rows:5041895,status:'success',nb:'786c0566-47b',runtime:'n/a'},
+  {layer:'GLD',order:5,table:'gld_flat_forecast_actual_2',load:'overwrite',freq:'Daily',rows:24929891,status:'success',nb:'4abb9011-9b6',runtime:'n/a'},
+  {layer:'GLD',order:5,table:'gld_forecast_kpi_metric_2',load:'overwrite',freq:'Daily',rows:2089844,status:'success',nb:'1a595d94-71f',runtime:'n/a'}
 ];
 
 const ENGINES={REF:'nb_etl',BRZ:'nb_etl',SLV:'nb_slv_etl',GLD:'nb_gld_etl'};
