@@ -19,6 +19,7 @@
   --green:#22c55e;--green2:#4ade80;
   --cyan:#06b6d4;--cyan2:#22d3ee;
   --red:#ef4444;
+  --teal:#14b8a6;--teal2:#2dd4bf;
 }
 html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
 
@@ -54,6 +55,7 @@ svg{display:block}
 /* NODE STYLES — fully opaque backgrounds so lines don't show through */
 .n-master{rx:10;fill:#0c1a3a;stroke:rgba(59,130,246,.5);stroke-width:1.5}
 .n-pipeline{rx:8;stroke-width:1.5}
+.n-config{rx:8;fill:#071a1a;stroke:rgba(20,184,166,.45);stroke-width:1.5;stroke-dasharray:6 3}
 .n-engine{rx:6;fill:#080e1e;stroke-dasharray:5 3;stroke-width:1.5}
 .n-group{rx:7;fill:#0a1020;stroke:rgba(255,255,255,.1);stroke-width:1}
 .n-table{rx:6;fill:#0d1525;stroke:rgba(255,255,255,.08);stroke-width:1}
@@ -121,12 +123,12 @@ svg{display:block}
     <div class="logo">⚡</div>
     <div>
       <h1>Enterprise SupplyChain — Pipeline Decomposition Tree</h1>
-      <div class="topbar-sub">Workspace: Enterprise SupplyChain-Dev │ Source: dbo.utl_pipeline_metadata │ 26 Tables │ ~234M Rows</div>
+      <div class="topbar-sub">Workspace: Enterprise SupplyChain-Dev │ Source: dbo.utl_pipeline_metadata │ 26 Tables │ ~233M Rows</div>
     </div>
   </div>
   <div class="topbar-right">
     <div class="chip chip-g">● DAILY 10:00 AM</div>
-    <div class="chip chip-b">Δ v139</div>
+    <div class="chip chip-b">Δ v164</div>
   </div>
 </div>
 
@@ -186,40 +188,48 @@ const DATA=[
   {layer:'GLD',order:5,table:'gld_forecast_kpi_metric_2',load:'overwrite',freq:'Daily',rows:2089844,status:'success',nb:'1a595d94-71f',runtime:'n/a'}
 ];
 
-const ENGINES={REF:'nb_etl',BRZ:'nb_etl',SLV:'nb_slv_etl',GLD:'nb_gld_etl'};
-const COL={BRZ:'#f97316',REF:'#06b6d4',SLV:'#a855f7',GLD:'#eab308'};
-const COL2={BRZ:'#fb923c',REF:'#22d3ee',SLV:'#c084fc',GLD:'#facc15'};
+const ENGINES={REF:'brz_engine',BRZ:'brz_engine',SLV:'slv_engine',GLD:'gld_engine'};
+const COL={BRZ:'#f97316',REF:'#06b6d4',SLV:'#a855f7',GLD:'#eab308',CONFIG:'#14b8a6'};
+const COL2={BRZ:'#fb923c',REF:'#22d3ee',SLV:'#c084fc',GLD:'#facc15',CONFIG:'#2dd4bf'};
 
 function fmt(n){if(!n)return'0';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return Math.round(n/1e3)+'K';return String(n)}
 function fmtFull(n){return n?n.toLocaleString():'0'}
 function shortT(t){return t.replace(/_2$/,'').replace(/^(brz|ref|slv|gld)_/,'')}
 
 // ===== HIERARCHY =====
+// Tree: master → pipelines → engines → groups → ETL notebooks
+// env_config is injected visually between pipelines and engines
 const hier = {
-  id:'root',type:'master',name:'pl_master_daily',sub:'Sequential Orchestrator │ Schedule: Daily @ 10:00 AM',layer:'MASTER',
+  id:'root',type:'master',name:'pl_master_daily',
+  sub:'Sequential Orchestrator  │  Schedule: Daily @ 10:00 AM SEA',
+  layer:'MASTER',
   children:[
-    {id:'pl_brz',type:'pipeline',layer:'BRZ',name:'pl_brz_daily',sub:'ForEach batchCount=3',
+    {id:'pl_brz',type:'pipeline',layer:'BRZ',name:'① pl_brz_daily',sub:'Step 1 │ ForEach batchCount=3',
       children:[
-        {id:'eng_ref',type:'engine',layer:'REF',name:'⚙ nb_etl',sub:'Bronze ETL Engine → all REF+BRZ tables call this notebook'},
-        {id:'grp_ref',type:'group',layer:'REF',name:'REF · 9 tables',sub:'Monthly │ Overwrite',
-          children:DATA.filter(d=>d.layer==='REF').map((d,i)=>({id:'r'+i,type:'table',layer:'REF',data:d}))},
-        {id:'grp_brz',type:'group',layer:'BRZ',name:'BRZ · 7 tables',sub:'Daily │ Overwrite/Incremental',
-          children:DATA.filter(d=>d.layer==='BRZ').map((d,i)=>({id:'b'+i,type:'table',layer:'BRZ',data:d}))}
+        {id:'eng_brz',type:'engine',layer:'BRZ',name:'⚙ brz_engine',sub:'Bronze Engine — processes REF+BRZ tables',
+          children:[
+            {id:'grp_ref',type:'group',layer:'REF',name:'REF · 9 ETL notebooks',sub:'Monthly │ Overwrite │ Order 1',
+              children:DATA.filter(d=>d.layer==='REF').map((d,i)=>({id:'r'+i,type:'table',layer:'REF',data:d}))},
+            {id:'grp_brz',type:'group',layer:'BRZ',name:'BRZ · 7 ETL notebooks',sub:'Daily │ Overwrite/Incremental │ Order 1',
+              children:DATA.filter(d=>d.layer==='BRZ').map((d,i)=>({id:'b'+i,type:'table',layer:'BRZ',data:d}))}
+          ]}
       ]},
-    {id:'pl_slv',type:'pipeline',layer:'SLV',name:'pl_slv_daily',sub:'ForEach batchCount=4',
+    {id:'pl_slv',type:'pipeline',layer:'SLV',name:'② pl_slv_daily',sub:'Step 2 │ depends: pl_brz ✓ │ ForEach batchCount=4',
       children:[
-        {id:'eng_slv',type:'engine',layer:'SLV',name:'⚙ nb_slv_etl',sub:'Silver ETL Engine → all SLV tables call this notebook'},
-        {id:'stg1',type:'group',layer:'SLV',name:'Stage 1 · Order 2',sub:'3 tables · Base Transforms',
-          children:DATA.filter(d=>d.order===2).map((d,i)=>({id:'s2_'+i,type:'table',layer:'SLV',data:d}))},
-        {id:'stg2',type:'group',layer:'SLV',name:'Stage 2 · Order 3',sub:'4 tables · Time-Series Agg',
-          children:DATA.filter(d=>d.order===3).map((d,i)=>({id:'s3_'+i,type:'table',layer:'SLV',data:d}))},
-        {id:'stg3',type:'group',layer:'SLV',name:'Stage 3 · Order 4',sub:'1 table · Business Models',
-          children:DATA.filter(d=>d.order===4).map((d,i)=>({id:'s4_'+i,type:'table',layer:'SLV',data:d}))}
+        {id:'eng_slv',type:'engine',layer:'SLV',name:'⚙ slv_engine',sub:'Silver Engine — processes SLV tables in 3 stages',
+          children:[
+            {id:'stg1',type:'group',layer:'SLV',name:'Stage 1 · Order 2',sub:'3 ETL notebooks · Base Transforms',
+              children:DATA.filter(d=>d.order===2).map((d,i)=>({id:'s2_'+i,type:'table',layer:'SLV',data:d}))},
+            {id:'stg2',type:'group',layer:'SLV',name:'Stage 2 · Order 3',sub:'4 ETL notebooks · Time-Series Aggregation',
+              children:DATA.filter(d=>d.order===3).map((d,i)=>({id:'s3_'+i,type:'table',layer:'SLV',data:d}))},
+            {id:'stg3',type:'group',layer:'SLV',name:'Stage 3 · Order 4',sub:'1 ETL notebook · Business Models',
+              children:DATA.filter(d=>d.order===4).map((d,i)=>({id:'s4_'+i,type:'table',layer:'SLV',data:d}))}
+          ]}
       ]},
-    {id:'pl_gld',type:'pipeline',layer:'GLD',name:'pl_gld_daily',sub:'ForEach batchCount=3',
+    {id:'pl_gld',type:'pipeline',layer:'GLD',name:'③ pl_gld_daily',sub:'Step 3 │ depends: pl_slv ✓ │ ForEach batchCount=3',
       children:[
-        {id:'eng_gld',type:'engine',layer:'GLD',name:'⚙ nb_gld_etl',sub:'Gold ETL Engine → all GLD tables call this notebook'},
-        ...DATA.filter(d=>d.layer==='GLD').map((d,i)=>({id:'g'+i,type:'table',layer:'GLD',data:d}))
+        {id:'eng_gld',type:'engine',layer:'GLD',name:'⚙ gld_engine',sub:'Gold Engine — processes GLD tables',
+          children:DATA.filter(d=>d.layer==='GLD').map((d,i)=>({id:'g'+i,type:'table',layer:'GLD',data:d}))}
       ]}
   ]
 };
@@ -235,63 +245,145 @@ const glow=defs.append('filter').attr('id','glow').attr('x','-30%').attr('y','-3
 glow.append('feGaussianBlur').attr('stdDeviation','3').attr('result','blur');
 glow.append('feMerge').selectAll('feMergeNode').data(['blur','SourceGraphic']).enter().append('feMergeNode').attr('in',d=>d);
 
+// Arrowhead markers
+['BRZ','SLV','GLD','REF','CONFIG','DEFAULT'].forEach(layer=>{
+  const color=COL[layer]||'rgba(255,255,255,.3)';
+  defs.append('marker').attr('id','arrow-'+layer).attr('viewBox','0 0 10 8')
+    .attr('refX',10).attr('refY',4).attr('markerWidth',8).attr('markerHeight',6)
+    .attr('orient','auto')
+    .append('path').attr('d','M0,0 L10,4 L0,8 L3,4 Z').attr('fill',color).attr('opacity',.7);
+});
+
 const g = svg.append('g');
 const linkG = g.append('g');
 const nodeG = g.append('g');
 
-const zoom = d3.zoom().scaleExtent([.15,3]).on('zoom',e=>g.attr('transform',e.transform));
+const zoom = d3.zoom().scaleExtent([.1,3]).on('zoom',e=>g.attr('transform',e.transform));
 svg.call(zoom);
 
 // ===== TREE LAYOUT (Horizontal LR) =====
 const root = d3.hierarchy(hier);
-const tree = d3.tree().nodeSize([38,240]).separation((a,b)=>{
+const tree = d3.tree().nodeSize([40,280]).separation((a,b)=>{
   if(a.parent===b.parent){
     if(a.data.type==='table'||b.data.type==='table')return 1;
-    return 1.4;
+    return 1.5;
   }
-  return 1.6;
+  return 1.8;
 });
 tree(root);
 
 // Swap x/y for horizontal layout
 root.descendants().forEach(d=>{[d.x,d.y]=[d.y,d.x]});
 
+// Add extra horizontal space between pipelines and engines for env_config bus
+// Shift all nodes at depth >= 2 (engines, groups, tables) to the right by 250px
+root.descendants().forEach(d=>{
+  if(d.depth >= 2) d.x += 450;
+});
+
 // Calculate bounds
 const nodes = root.descendants();
 const links = root.links();
 let xMin=Infinity,xMax=-Infinity,yMin=Infinity,yMax=-Infinity;
 nodes.forEach(n=>{xMin=Math.min(xMin,n.x);xMax=Math.max(xMax,n.x);yMin=Math.min(yMin,n.y);yMax=Math.max(yMax,n.y)});
-const tw=xMax-xMin+500,th=yMax-yMin+200;
-const fitScale=Math.min(W/tw,H/th,.8);
+const tw=xMax-xMin+600,th=yMax-yMin+200;
+const fitScale=Math.min(W/tw,H/th,.7);
 const fitX=W/2-((xMin+xMax)/2)*fitScale;
 const fitY=H/2-((yMin+yMax)/2)*fitScale;
 const initTransform=d3.zoomIdentity.translate(fitX,fitY).scale(fitScale);
 svg.call(zoom.transform,initTransform);
 
-// ===== DRAW LINKS =====
+// ===== DRAW ALL TREE LINKS — hide pipeline→engine (replaced by bus) =====
 linkG.selectAll('path').data(links).join('path')
   .attr('class','tree-link')
   .attr('stroke',d=>COL[d.target.data.layer]||'rgba(255,255,255,.06)')
+  .attr('opacity',d=>{
+    // HIDE pipeline→engine links (will be replaced by bus pattern)
+    if(d.source.data.type==='pipeline' && d.target.data.type==='engine') return 0;
+    return .5;
+  })
+  .attr('marker-end',d=>{
+    if(d.source.data.type==='master') return `url(#arrow-${d.target.data.layer})`;
+    return null;
+  })
   .attr('d',d=>{
     const sx=d.source.x, sy=d.source.y, tx=d.target.x, ty=d.target.y;
-    const mx=(sx+tx)/2;
-    return `M${sx},${sy} C${mx},${sy} ${mx},${ty} ${tx},${ty}`;
+    const midX=sx+(tx-sx)*0.5;
+    return `M${sx},${sy} L${midX},${sy} L${midX},${ty} L${tx},${ty}`;
   });
+
+// ===== BUS PATTERN: pipelines → env_config → engines =====
+const plNodes = nodes.filter(n=>n.data.type==='pipeline');
+const engNodes = nodes.filter(n=>n.data.type==='engine');
+
+// env_config position: midpoint between pipeline right edges and engine left edges
+const plRightEdge = plNodes[0].x + 110;  // pipeline right edge
+const engLeftEdge = engNodes[0].x - 115; // engine left edge
+const envCX = (plRightEdge + engLeftEdge) / 2;
+const envCY = plNodes.reduce((s,n)=>s+n.y,0) / plNodes.length;
+const envW = 220, envH = 40;
+
+// Bus X positions: 1/3 and 2/3 between pipeline edge and engine edge
+const gap = engLeftEdge - plRightEdge;
+const busLeftX = plRightEdge + gap * 0.15;
+const busRightX = engLeftEdge - gap * 0.15;
+
+const plYs = plNodes.map(n=>n.y);
+const plYmin = Math.min(...plYs), plYmax = Math.max(...plYs);
+const engYs = engNodes.map(n=>n.y);
+const engYmin = Math.min(...engYs), engYmax = Math.max(...engYs);
+
+// Separate SVG group rendered on top
+const busG = g.append('g');
+
+// LEFT: pipeline stubs → vertical bus → env_config
+plNodes.forEach(pl=>{
+  busG.append('line')
+    .attr('x1', pl.x + 110).attr('y1', pl.y)
+    .attr('x2', busLeftX).attr('y2', pl.y)
+    .attr('stroke','#14b8a6').attr('stroke-width',2).attr('opacity',.65);
+});
+busG.append('line')
+  .attr('x1',busLeftX).attr('y1',plYmin).attr('x2',busLeftX).attr('y2',plYmax)
+  .attr('stroke','#14b8a6').attr('stroke-width',2).attr('opacity',.65);
+busG.append('line')
+  .attr('x1',busLeftX).attr('y1',envCY)
+  .attr('x2',envCX - envW/2).attr('y2',envCY)
+  .attr('stroke','#14b8a6').attr('stroke-width',2).attr('opacity',.65)
+  .attr('marker-end','url(#arrow-CONFIG)');
+
+// RIGHT: env_config → vertical bus → engine stubs
+busG.append('line')
+  .attr('x1',envCX + envW/2).attr('y1',envCY)
+  .attr('x2',busRightX).attr('y2',envCY)
+  .attr('stroke','#14b8a6').attr('stroke-width',2).attr('opacity',.65);
+busG.append('line')
+  .attr('x1',busRightX).attr('y1',engYmin).attr('x2',busRightX).attr('y2',engYmax)
+  .attr('stroke','#14b8a6').attr('stroke-width',2).attr('opacity',.65);
+engNodes.forEach(eng=>{
+  busG.append('line')
+    .attr('x1',busRightX).attr('y1',eng.y)
+    .attr('x2',eng.x - 115).attr('y2',eng.y)
+    .attr('stroke','#14b8a6').attr('stroke-width',2).attr('opacity',.65)
+    .attr('marker-end','url(#arrow-CONFIG)');
+});
 
 // ===== DRAW NODES =====
 function nW(d){
-  if(d.data.type==='master')return 210;
-  if(d.data.type==='pipeline')return 150;
-  if(d.data.type==='engine')return 190;
-  if(d.data.type==='group')return 150;
-  return 185;
+  if(d.data.type==='master')return 300;
+  if(d.data.type==='pipeline')return 220;
+  if(d.data.type==='config')return 240;
+  if(d.data.type==='engine')return 230;
+  if(d.data.type==='group')return 210;
+  return 230;
 }
 function nH(d){
-  if(d.data.type==='master')return 48;
-  if(d.data.type==='pipeline')return 38;
-  if(d.data.type==='engine')return 32;
-  if(d.data.type==='group')return 34;
-  return 30;
+  if(d.data.type==='master')return 54;
+  if(d.data.type==='pipeline')return 42;
+  if(d.data.type==='config')return 40;
+  if(d.data.type==='engine')return 38;
+  if(d.data.type==='group')return 38;
+  return 34;
 }
 
 const nodeEnter = nodeG.selectAll('g').data(nodes).join('g')
@@ -309,6 +401,7 @@ nodeEnter.append('rect')
     const el=d3.select(this);
     const t=d.data.type, l=d.data.layer;
     if(t==='master'){el.attr('class','n-master').attr('filter','url(#glow)');}
+    else if(t==='config'){el.attr('class','n-config').attr('filter','url(#glow)');}
     else if(t==='pipeline'){
       const rgb=hexToRgb(COL[l]).split(',').map(Number);
       const solidFill=`rgb(${Math.round(rgb[0]*.12+6*.88)},${Math.round(rgb[1]*.12+10*.88)},${Math.round(rgb[2]*.12+20*.88)})`;
@@ -322,23 +415,24 @@ nodeEnter.append('rect')
     }
   });
 
-// Left accent bar for groups
+// Left accent bar for groups and pipelines
 nodeEnter.filter(d=>d.data.type==='group'||d.data.type==='pipeline').append('rect')
   .attr('x',0).attr('y',0).attr('width',3).attr('height',d=>nH(d))
   .attr('fill',d=>COL[d.data.layer]).attr('rx',1).attr('opacity',.6);
 
 // Title text
 nodeEnter.append('text')
-  .attr('x',d=>d.data.type==='master'?nW(d)/2:12)
+  .attr('x',d=>(d.data.type==='master'||d.data.type==='config')?nW(d)/2:12)
   .attr('y',d=>{
     const h=nH(d);
-    if(d.data.type==='master')return h/2-4;
-    if(d.data.type==='table')return 12;
-    return h/2-4;
+    if(d.data.type==='master')return h/2-6;
+    if(d.data.type==='table')return 14;
+    return h/2-5;
   })
-  .attr('text-anchor',d=>d.data.type==='master'?'middle':'start')
+  .attr('text-anchor',d=>(d.data.type==='master'||d.data.type==='config')?'middle':'start')
   .style('fill',d=>{
     if(d.data.type==='master')return '#fff';
+    if(d.data.type==='config')return '#2dd4bf';
     if(d.data.type==='engine')return COL2[d.data.layer];
     if(d.data.type==='table'){
       const isF=d.data.data&&d.data.data.status==='failed';
@@ -346,7 +440,7 @@ nodeEnter.append('text')
     }
     return COL2[d.data.layer];
   })
-  .style('font-size',d=>d.data.type==='master'?'12px':d.data.type==='table'?'8.5px':'10px')
+  .style('font-size',d=>d.data.type==='master'?'13px':d.data.type==='table'?'9px':'10.5px')
   .style('font-weight',d=>d.data.type==='table'?'500':'700')
   .style('font-family','Inter,sans-serif')
   .each(function(d){
@@ -354,60 +448,91 @@ nodeEnter.append('text')
     let label;
     if(d.data.type==='table'){
       label=shortT(d.data.data.table);
-      const maxChars=Math.floor((nW(d)-30)/5);
+      const maxChars=Math.floor((nW(d)-40)/5.5);
       if(label.length>maxChars)label=label.slice(0,maxChars-1)+'…';
     } else {
       label=d.data.name;
+      const maxChars=Math.floor((nW(d)-20)/5.5);
+      if(label.length>maxChars)label=label.slice(0,maxChars-1)+'…';
     }
     el.text(label);
   });
 
-// Sub text — brighter color for readability
+// Sub text
 nodeEnter.filter(d=>d.data.type!=='table').append('text')
-  .attr('x',d=>d.data.type==='master'?nW(d)/2:12)
-  .attr('y',d=>nH(d)/2+8)
-  .attr('text-anchor',d=>d.data.type==='master'?'middle':'start')
+  .attr('x',d=>(d.data.type==='master'||d.data.type==='config')?nW(d)/2:12)
+  .attr('y',d=>nH(d)/2+9)
+  .attr('text-anchor',d=>(d.data.type==='master'||d.data.type==='config')?'middle':'start')
   .style('fill','#8b9bb5').style('font-size','7.5px').style('font-family','Inter,sans-serif')
   .each(function(d){
     const el=d3.select(this);
     let sub=d.data.sub;
-    const maxChars=Math.floor((nW(d)-20)/4.5);
+    const maxChars=Math.floor((nW(d)-20)/4);
     if(sub.length>maxChars)sub=sub.slice(0,maxChars-1)+'…';
     el.text(sub);
   });
 
 // Stats for table nodes
 nodeEnter.filter(d=>d.data.type==='table').each(function(d){
-  const g=d3.select(this);
+  const gEl=d3.select(this);
   const t=d.data.data;
   const isF=t.status==='failed';
+  const w=nW(d);
   // Rows
-  g.append('text').attr('x',12).attr('y',23)
-    .style('fill',isF?'#ef4444':'#4ade80').style('font-size','8px')
+  gEl.append('text').attr('x',12).attr('y',27)
+    .style('fill',isF?'#ef4444':'#4ade80').style('font-size','8.5px')
     .style('font-family','JetBrains Mono,monospace').style('font-weight','600')
     .text(isF?'✗ FAIL':'✓ '+fmt(t.rows));
   // Load type
-  g.append('text').attr('x',75).attr('y',23)
-    .style('fill','#8b9bb5').style('font-size','7px').style('font-family','JetBrains Mono,monospace')
+  gEl.append('text').attr('x',90).attr('y',27)
+    .style('fill','#8b9bb5').style('font-size','7.5px').style('font-family','JetBrains Mono,monospace')
     .text(t.load.toUpperCase());
   // Freq
-  g.append('text').attr('x',135).attr('y',23)
-    .style('fill','#7a8ba3').style('font-size','7px').style('font-family','Inter,sans-serif')
+  gEl.append('text').attr('x',165).attr('y',27)
+    .style('fill','#7a8ba3').style('font-size','7.5px').style('font-family','Inter,sans-serif')
     .text(t.freq);
   // Status dot
-  g.append('circle').attr('cx',nW(d)-8).attr('cy',nH(d)/2).attr('r',3)
+  gEl.append('circle').attr('cx',w-10).attr('cy',nH(d)/2).attr('r',3.5)
     .attr('fill',isF?'#ef4444':'#22c55e');
 });
 
 // master stats row
 nodeEnter.filter(d=>d.data.type==='master').each(function(d){
-  const g=d3.select(this);
-  g.append('text').attr('x',nW(d)/2).attr('y',nH(d)/2+20).attr('text-anchor','middle')
-    .style('fill','#4ade80').style('font-size','8px').style('font-family','JetBrains Mono,monospace').style('font-weight','600')
-    .text('26 tables · ~234M rows');
+  const gEl=d3.select(this);
+  gEl.append('text').attr('x',nW(d)/2).attr('y',nH(d)/2+22).attr('text-anchor','middle')
+    .style('fill','#4ade80').style('font-size','8.5px').style('font-family','JetBrains Mono,monospace').style('font-weight','600')
+    .text('26 tables · ~233M rows · 26/26 ✓');
 });
 
 function hexToRgb(h){const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`${r},${g},${b}`}
+
+// ===== DRAW env_config NODE (after tree nodes so it's not overwritten) =====
+const envGNode = nodeG.append('g')
+  .attr('transform',`translate(${envCX-envW/2},${envCY-envH/2})`)
+  .style('cursor','pointer')
+  .on('mouseenter',(ev)=>{
+    const tip=document.getElementById('tip');
+    tip.innerHTML=`<div class="tip-title" style="color:var(--teal2)">📋 env_config</div>
+      <div class="tip-grid">
+        <span class="tip-l">Type</span><span class="tip-v">Shared Configuration Notebook</span>
+        <span class="tip-l">Called by</span><span class="tip-v">brz_engine, slv_engine, gld_engine</span>
+        <span class="tip-l">Purpose</span><span class="tip-v">Environment setup, connections, shared variables</span>
+        <span class="tip-l">Flow</span><span class="tip-v">Pipeline → env_config → Engine → ETL notebooks</span>
+      </div>`;
+    tip.classList.add('show');
+    tip.style.left=(ev.clientX+14)+'px';tip.style.top=Math.max(10,ev.clientY-10)+'px';
+  })
+  .on('mousemove',ev=>{const t=document.getElementById('tip');t.style.left=(ev.clientX+14)+'px';t.style.top=Math.max(10,ev.clientY-10)+'px'})
+  .on('mouseleave',()=>hideTip());
+
+envGNode.append('rect').attr('width',envW).attr('height',envH)
+  .attr('class','n-config').attr('filter','url(#glow)');
+envGNode.append('text').attr('x',envW/2).attr('y',envH/2-5).attr('text-anchor','middle')
+  .style('fill','#2dd4bf').style('font-size','10.5px').style('font-weight','700').style('font-family','Inter,sans-serif')
+  .text('📋 env_config');
+envGNode.append('text').attr('x',envW/2).attr('y',envH/2+9).attr('text-anchor','middle')
+  .style('fill','#8b9bb5').style('font-size','7.5px').style('font-family','Inter,sans-serif')
+  .text('Shared Config — used by all 3 engines');
 
 // ===== TOOLTIP =====
 function showTip(ev,d){
@@ -418,11 +543,20 @@ function showTip(ev,d){
     h=`<div class="tip-title" style="color:var(--blue2)">⚙️ pl_master_daily</div>
     <div class="tip-grid">
       <span class="tip-l">Role</span><span class="tip-v">Sequential Orchestrator</span>
-      <span class="tip-l">Flow</span><span class="tip-v">pl_brz → pl_slv → pl_gld</span>
-      <span class="tip-l">Metadata</span><span class="tip-v">dbo.utl_pipeline_metadata</span>
-      <span class="tip-l">Tables</span><span class="tip-v" style="color:var(--green2)">26 (25 ok, 1 fail)</span>
-      <span class="tip-l">Total rows</span><span class="tip-v" style="color:var(--blue2)">~234,261,573</span>
-      <span class="tip-l">Schedule</span><span class="tip-v">Daily @ 10:00 AM</span>
+      <span class="tip-l">Flow</span><span class="tip-v">① pl_brz → ② pl_slv → ③ pl_gld</span>
+      <span class="tip-l">Config</span><span class="tip-v" style="color:var(--teal2)">env_config (shared by all engines)</span>
+      <span class="tip-l">Engines</span><span class="tip-v">brz_engine · slv_engine · gld_engine</span>
+      <span class="tip-l">Tables</span><span class="tip-v" style="color:var(--green2)">26 (26/26 success)</span>
+      <span class="tip-l">Total rows</span><span class="tip-v" style="color:var(--blue2)">~232,620,254</span>
+      <span class="tip-l">Schedule</span><span class="tip-v">Daily @ 10:00 AM (SEA Time)</span>
+    </div>`;
+  } else if(n.type==='config'){
+    h=`<div class="tip-title" style="color:var(--teal2)">📋 env_config</div>
+    <div class="tip-grid">
+      <span class="tip-l">Type</span><span class="tip-v">Shared Configuration Notebook</span>
+      <span class="tip-l">Called by</span><span class="tip-v">brz_engine, slv_engine, gld_engine</span>
+      <span class="tip-l">Purpose</span><span class="tip-v">Environment setup, connection strings, shared variables</span>
+      <span class="tip-l">Pattern</span><span class="tip-v">ETL notebook → Engine → env_config</span>
     </div>`;
   } else if(n.type==='pipeline'){
     h=`<div class="tip-title" style="color:${COL2[n.layer]}">${n.name}</div>
@@ -430,15 +564,16 @@ function showTip(ev,d){
       <span class="tip-l">Layer</span><span class="tip-v" style="color:${COL2[n.layer]}">${n.layer}</span>
       <span class="tip-l">Config</span><span class="tip-v">${n.sub}</span>
       <span class="tip-l">Engine</span><span class="tip-v" style="color:${COL2[n.layer]}">${ENGINES[n.layer]}</span>
-      <span class="tip-l">Pattern</span><span class="tip-v">ForEach → Engine(params) → Target Table</span>
+      <span class="tip-l">Config</span><span class="tip-v" style="color:var(--teal2)">→ env_config</span>
+      <span class="tip-l">Pattern</span><span class="tip-v">Pipeline → ETL notebooks → Engine → env_config</span>
     </div>`;
   } else if(n.type==='engine'){
     h=`<div class="tip-title" style="color:${COL2[n.layer]}">⚙ ${n.name.replace('⚙ ','')}</div>
     <div class="tip-grid">
       <span class="tip-l">Type</span><span class="tip-v">Parameterized Engine Notebook</span>
-      <span class="tip-l">Called by</span><span class="tip-v">ForEach activity in pipeline</span>
+      <span class="tip-l">Called by</span><span class="tip-v">Each ETL notebook in this layer</span>
+      <span class="tip-l">Calls</span><span class="tip-v" style="color:var(--teal2)">env_config (shared config)</span>
       <span class="tip-l">Parameters</span><span class="tip-v">table_name, notebook_id, load_type</span>
-      <span class="tip-l">Pattern</span><span class="tip-v">Each table row → 1 engine call</span>
     </div>
     <div class="tip-lin">${n.sub}</div>`;
   } else if(n.type==='group'){
@@ -456,11 +591,9 @@ function showTip(ev,d){
       <span class="tip-l">Status</span><span class="tip-v" style="color:${isF?'var(--red)':'var(--green)'};font-weight:700">${t.status.toUpperCase()}</span>
       <span class="tip-l">Runtime</span><span class="tip-v">${t.runtime}</span>
       <span class="tip-l">Engine</span><span class="tip-v" style="color:${COL2[t.layer]}">${ENGINES[t.layer]}</span>
-      <span class="tip-l">Notebook</span><span class="tip-v" style="font-size:9px">${t.nb}...</span>
+      <span class="tip-l">Config</span><span class="tip-v" style="color:var(--teal2)">→ env_config</span>
+      <span class="tip-l">Notebook ID</span><span class="tip-v" style="font-size:9px">${t.nb}...</span>
     </div>`;
-    if(t.lineage&&t.lineage.length){
-      h+=`<div class="tip-lin"><span style="color:var(--text2)">Lineage: </span>${t.lineage.map(s=>`<span class="src">${s}</span>`).join(' <span class="ar">→</span> ')}</div>`;
-    }
   }
   tip.innerHTML=h;
   tip.classList.add('show');
@@ -477,13 +610,22 @@ document.getElementById('zf').onclick=()=>svg.transition().duration(500).call(zo
 // ===== SIDEBAR =====
 (function buildSidebar(){
   const sb=document.getElementById('ss');
+
+  // env_config entry at top
+  let h=`<div class="lc" style="border-left:2px solid var(--teal);margin-bottom:6px">
+    <div class="lh" style="cursor:default">
+      <div class="li" style="background:rgba(20,184,166,.12);color:var(--teal);font-size:11px">📋</div>
+      <div class="lt" style="color:var(--teal2)">env_config</div>
+      <span style="font-size:7px;color:var(--text3)">Shared Config</span>
+    </div>
+  </div>`;
+
   const groups=[
-    {layer:'REF',icon:'📚',title:'REF — Reference',meta:'Order 1 │ Monthly │ Overwrite',tables:DATA.filter(t=>t.layer==='REF')},
-    {layer:'BRZ',icon:'🟠',title:'BRZ — Raw Ingestion',meta:'Order 1 │ Daily │ Overwrite/Incr',tables:DATA.filter(t=>t.layer==='BRZ')},
-    {layer:'SLV',icon:'🟣',title:'SLV — Transforms',meta:'Order 2→3→4 │ Daily │ 3 Stages',tables:DATA.filter(t=>t.layer==='SLV'),stages:true},
-    {layer:'GLD',icon:'🟡',title:'GLD — Business',meta:'Order 5 │ Daily │ Overwrite',tables:DATA.filter(t=>t.layer==='GLD')}
+    {layer:'REF',icon:'📚',title:'REF — Reference',engine:'brz_engine',meta:'Order 1 │ Monthly │ Overwrite',tables:DATA.filter(t=>t.layer==='REF')},
+    {layer:'BRZ',icon:'🟠',title:'BRZ — Raw Ingestion',engine:'brz_engine',meta:'Order 1 │ Daily │ Overwrite/Incr',tables:DATA.filter(t=>t.layer==='BRZ')},
+    {layer:'SLV',icon:'🟣',title:'SLV — Transforms',engine:'slv_engine',meta:'Order 2→3→4 │ Daily │ 3 Stages',tables:DATA.filter(t=>t.layer==='SLV'),stages:true},
+    {layer:'GLD',icon:'🟡',title:'GLD — Business',engine:'gld_engine',meta:'Order 5 │ Daily │ Overwrite',tables:DATA.filter(t=>t.layer==='GLD')}
   ];
-  let h='';
   groups.forEach(g=>{
     const cls=g.layer.toLowerCase();
     h+=`<div class="lc lc-${cls} open" id="lc-${cls}">`;
@@ -491,7 +633,7 @@ document.getElementById('zf').onclick=()=>svg.transition().duration(500).call(zo
     h+=`<div class="li">${g.icon}</div><div class="lt">${g.title}</div>`;
     h+=`<div class="ln">${g.tables.length}</div><span class="lv">▾</span></div>`;
     h+=`<div class="lb">`;
-    h+=`<div class="le"><span style="font-size:10px">⚙</span><b>${ENGINES[g.layer]}</b><span style="color:var(--text3);font-weight:400;margin-left:2px">· Engine</span></div>`;
+    h+=`<div class="le"><span style="font-size:10px">⚙</span><b>${g.engine}</b><span style="color:var(--text3);font-weight:400;margin-left:2px">· Engine → env_config</span></div>`;
     h+=`<div class="lm">${g.meta}</div>`;
     if(g.stages){
       [{l:'Stage 1 · Order 2',o:2},{l:'Stage 2 · Order 3',o:3},{l:'Stage 3 · Order 4',o:4}].forEach(s=>{
